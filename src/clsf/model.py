@@ -23,4 +23,7 @@ class LlamaModel(Model):
         return self._tokenizer
 
     def getResponse(self, *args, **kwargs):
-        return self.model.generate(*args, **kwargs)
+        return self._model(*args, **kwargs)
+
+    def eval(self):
+        self._model.eval()
