@@ -21,10 +21,7 @@ class MentalHealthPhraseExtractor:
         # Load spaCy NLP model for POS tagging
         self.nlp = spacy.load("en_core_web_sm")
 
-        # Used spans to avoid overlaps
-        self.used_spans = set()
-
-        # Regex for pronouns, contractions, and conjunctions
+        # Regex for pronouns, contractions, conjunctions
         self.pronoun_pattern = re.compile(
             r"\b(?:i|me|my|mine|myself|we|us|our|ours|ourselves|you|your|yours|"
             r"yourself|yourselves|he|him|his|himself|she|her|hers|herself|it|its|"
@@ -34,17 +31,20 @@ class MentalHealthPhraseExtractor:
             re.IGNORECASE
         )
 
-        # Regex to split at verbs/adverbs for smaller phrases
+        # Regex to split at verbs/adverbs
         self.verbs_and_modifiers = re.compile(
             r"\b(?:feel|feeling|be|been|am|is|was|are|were|have|has|had|very|really|"
             r"seem|seemed|find|seems|can|could|would|should|do|did|does|why|how|what|when|where|who)\b", 
             re.IGNORECASE
         )
 
+        # Final regex to clean orphaned artifacts like "'t"
+        self.orphan_pattern = re.compile(r"\b't\b|'[a-zA-Z]\b")
+
+        self.used_spans = set()
+
     def extract_phrases(self, text):
-        """
-        Extract mental health related phrases using clinical models.
-        """
+        """Extract mental health related phrases using clinical models."""
         self.used_spans.clear()
         phrases = []
 
@@ -63,7 +63,7 @@ class MentalHealthPhraseExtractor:
         # Sort phrases by position in text
         phrases.sort(key=lambda x: x['start'])
 
-        # Merge adjacent phrases, remove unnecessary words, and split further
+        # Merge adjacent phrases, clean them, and split further
         merged_phrases = self._merge_phrases(phrases)
 
         return merged_phrases
@@ -118,7 +118,7 @@ class MentalHealthPhraseExtractor:
         return any(start < used_end and end > used_start for used_start, used_end in self.used_spans)
 
     def _merge_phrases(self, phrases, max_gap=2):
-        """Merge overlapping phrases, remove unnecessary words, and split further."""
+        """Merge overlapping phrases and clean further."""
         if not phrases:
             return []
 
@@ -136,7 +136,7 @@ class MentalHealthPhraseExtractor:
             else:
                 merged.append(current)
 
-        # Clean and split phrases further
+        # Clean and split further
         final_phrases = []
         for phrase in merged:
             cleaned_phrases = self._split_atomic(phrase['phrase'])
@@ -145,15 +145,32 @@ class MentalHealthPhraseExtractor:
         return final_phrases
 
     def _split_atomic(self, phrase):
-        """Split phrase into smaller atomic parts and filter irrelevant ones."""
+        """Split phrase into smaller parts and filter irrelevant ones."""
         cleaned_phrase = self.pronoun_pattern.sub("", phrase)
         split_phrases = re.split(self.verbs_and_modifiers, cleaned_phrase)
-        return [p.strip() for p in split_phrases if self._is_relevant(p.strip())]
+        atomic_phrases = [p.strip() for p in split_phrases if self._is_relevant(p.strip())]
+        return [self._clean_orphan(p) for p in atomic_phrases]
+
+    def _clean_orphan(self, phrase):
+        """Remove orphaned contractions like 't."""
+        return self.orphan_pattern.sub("", phrase).strip()
 
     def _is_relevant(self, word):
-        """Filter out single irrelevant words like 'why', 'how', or verbs."""
+        """Keep only relevant words (nouns/adjectives)."""
         doc = self.nlp(word)
-        return any(token.pos_ in {"NOUN", "ADJ"} for token in doc)  # Keep only nouns or adjectives
+        return any(token.pos_ in {"NOUN", "ADJ"} for token in doc)
+
+def remove_apostrophe_parts(phrases):
+    # Pattern to match the apostrophe followed by a letter with no letter before
+    pattern = r"(?<!\w)(’[a-zA-Z])"
+    modified_phrases = []
+
+    for phrase in phrases:
+        # Replace the matched pattern with an empty string (remove it)
+        modified_phrase = re.sub(pattern, '', phrase)
+        modified_phrases.append(modified_phrase.strip())
+
+    return modified_phrases
 
 def main():
     extractor = MentalHealthPhraseExtractor()
@@ -173,11 +190,21 @@ def main():
     Why is it so hard to breathe? Why does everything feel like a huge deal? I just want to hide!
     """
 
-    phrases = extractor.extract_phrases(sample_text)
+    sample_text = """
+    I dont understand My husband of 8 years said he wants a divorce. 
+    He recently gave up drinking and has never developed healthy coping skills. 
+    I am trying to be supportive, and he told me just a week ago how I was the love of his life.  
+    If we fought a ton, didn't have a good sex life, and didn't care, I'd get it. 
+    I don't understand why he wants to throw away our marriage?
+    """
 
+    phrases = extractor.extract_phrases(sample_text)
+    phrases = remove_apostrophe_parts(phrases)
     print("Extracted Mental Health Indicators:")
     for phrase in phrases:
         print(f"- {phrase}")
+
+    print(phrases)
 
 if __name__ == "__main__":
     main()
