@@ -8,7 +8,11 @@ def polarityScores(text):
 
 def polarity(text):
     scores = polarityScores(text)
-    maxSc = np.argmax([scores['pos'], scores['neg'], scores['neu']])
+    print(scores)
+    posWeight = 0.8
+    neuWeight = 0.6
+    negWeight = 1
+    maxSc = np.argmax([posWeight * scores['pos'], negWeight * scores['neg'], neuWeight * scores['neu']])
     if maxSc == 0:
         return 'Positive'
     elif maxSc == 1:
