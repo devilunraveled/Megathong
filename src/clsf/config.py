@@ -1,5 +1,5 @@
 class RedditData:
-    labels : list = ['addiction', 'adhd', 'alcoholism', 'anxiety', 'autism', 'bipolar', 'bpd', 'consipiracy', 'depression', 'ptsd', 'schizophrenia', 'suicidewatch']
+    labels : list = ['addiction', 'anxiety', 'bipolar', 'depression', 'ptsd', 'adhd', 'suicidewatch', 'neutral']
 
 class BaseData:
     labels : list = ['normal', 'anxiety', 'bipolar', 'depression']
