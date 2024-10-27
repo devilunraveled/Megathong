@@ -2,6 +2,6 @@ class ModelConfig :
     name = 'mental/mental-bert-base-uncased'
 
 class Paths : 
-    data = "./data"
+    data = "../data"
     model = "./ckpt/"
     logs = "./logs/"

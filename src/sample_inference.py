@@ -56,9 +56,9 @@ if __name__ == "__main__":
     outputs = pipe(prompts, max_new_tokens=2, do_sample=True, temperature=0.1)
 
     # Extract and print the labels for each text in the batch
-    for i, output in enumerate(outputs):
-        label = output[0]["generated_text"].split("label: ")[-1].strip()
-        print(f"Text {i+1}: {label}")
+    # for i, output in enumerate(outputs):
+    label = outputs[0]["generated_text"].split("label: ")[-1].strip()
+        # print(f"Text {i+1}: {label}")
 
     with open("./outputs.txt", "w") as f:
         for i, output in enumerate(outputs):

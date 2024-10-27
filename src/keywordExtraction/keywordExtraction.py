@@ -1,3 +1,4 @@
+import spacy.cli
 import torch
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
 from transformers import AutoModelForTokenClassification
@@ -171,6 +172,12 @@ def remove_apostrophe_parts(phrases):
         modified_phrases.append(modified_phrase.strip())
 
     return modified_phrases
+
+def getKeyPhrases(text):
+    extractor = MentalHealthPhraseExtractor()
+    phrases = extractor.extract_phrases(text)
+    phrases = remove_apostrophe_parts(phrases)
+    return phrases
 
 def main():
     extractor = MentalHealthPhraseExtractor()

@@ -34,6 +34,7 @@ classes = sorted(list(df['subreddit'].unique()))  # Unique subreddits
 
 print("Classes : ", classes)
 
+exit()
 # Initialize the tokenizer and model
 tokenizer = RobertaTokenizer.from_pretrained("roberta-base")
 model = RobertaForSequenceClassification.from_pretrained("roberta-base", num_labels=len(classes))
@@ -48,7 +49,7 @@ model.to(device)
 optimizer = AdamW(model.parameters(), lr=1e-5)
 
 # Training loop
-num_epochs = 3  # Set the number of epochs
+num_epochs = 0  # Set the number of epochs
 
 for epoch in range(num_epochs):
     model.train()  # Set the model to training mode

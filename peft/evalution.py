@@ -30,13 +30,14 @@ class CustomDataset(Dataset):
         return datapoint
 
 # Load your evaluation data into a DataFrame (replace with your actual data)
-eval_df = pd.read_csv(f"{Paths.data}/labelListTestData.csv")
+eval_df = pd.read_csv(f"{Paths.data}/labelListTrainData.csv").sample(frac=0.1)  # Sample a fraction of the data
 classes = sorted(list(set(eval_df['subreddit'])))  # Unique subreddits
 
 # Load the fine-tuned model and tokenizer
 model_name = "fine-tuned-roberta"  # Path to your saved model
 tokenizer = RobertaTokenizer.from_pretrained('roberta-base')
-model = RobertaForSequenceClassification.from_pretrained(model_name, num_labels=len(classes))
+model = RobertaForSequenceClassification.from_pretrained(model_name)
+# model = RobertaForSequenceClassification.from_pretrained('roberta-base', num_labels=len(classes))
 
 # Create the evaluation dataset and dataloader
 eval_dataset = CustomDataset(dataframe=eval_df, tokenizer=tokenizer, classes=classes)

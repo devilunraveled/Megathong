@@ -2,8 +2,9 @@ import pandas as pd
 import numpy as np
 import os
 
-neutralDfs = 20
-dfSamples = 150
+neutralDfs = 25
+trainSize = 1000
+testSize = 250
 
 files = os.listdir('data/redditComments')
 
@@ -34,6 +35,7 @@ for file in files:
         continue
     df = pd.read_csv('data/redditComments/' + file)
     bipolarDf = pd.concat([bipolarDf, df])
+    bipolarDf['subreddit'] = 'bipolar'
 
 depressionDf = pd.DataFrame()
 for file in files:
@@ -61,7 +63,23 @@ neutralFiles = np.random.choice(files, neutralDfs)
 for file in neutralFiles:
     df = pd.read_csv('data/redditComments/' + file)
     neutralDf = pd.concat([neutralDf, df])
+    neutralDf['subreddit'] = 'neutral'
 
-dataDf = pd.concat([addictionDf.sample(dfSamples), adhdDf.sample(dfSamples), anxietyDf.sample(dfSamples), bipolarDf.sample(dfSamples), depressionDf.sample(dfSamples), ptsdDf.sample(dfSamples), suicideDf.sample(dfSamples), neutralDf.sample(dfSamples)])
 
-dataDf.to_csv('data/labelListData.csv', index=False)
+addictionDf = addictionDf.sample(trainSize + testSize)
+adhdDf = adhdDf.sample(trainSize + testSize)
+anxietyDf = anxietyDf.sample(trainSize + testSize)
+bipolarDf = bipolarDf.sample(trainSize + testSize)
+depressionDf = depressionDf.sample(trainSize + testSize)
+ptsdDf = ptsdDf.sample(trainSize + testSize)
+suicideDf = suicideDf.sample(trainSize + testSize)
+neutralDf = neutralDf.sample(trainSize + testSize)
+
+trainData = pd.concat([addictionDf[:trainSize], adhdDf[:trainSize], anxietyDf[:trainSize], bipolarDf[:trainSize], depressionDf[:trainSize], ptsdDf[:trainSize], suicideDf[:trainSize], neutralDf[:trainSize]])
+testData = pd.concat([addictionDf[trainSize:], adhdDf[trainSize:], anxietyDf[trainSize:], bipolarDf[trainSize:], depressionDf[trainSize:], ptsdDf[trainSize:], suicideDf[trainSize:], neutralDf[trainSize:]])
+
+print(trainData.groupby('subreddit').size())
+print(testData.groupby('subreddit').size())
+
+trainData.to_csv('data/labelListTrainData.csv', index=False)
+testData.to_csv('data/labelListTestData.csv', index=False)
